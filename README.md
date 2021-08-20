@@ -1,2 +1,2 @@
-# GeeTest
-GeeTest_Servers
+# Captcha
+Captcha_Servers
