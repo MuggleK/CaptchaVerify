@@ -359,7 +359,7 @@ class Capt_validate:
 
     def run(self,gt,challenge,proxy):
         retry_count = 0
-        while retry_count < 2:
+        while retry_count < 1:
             try:
                 self.session = requests.session()
                 send_data = {
