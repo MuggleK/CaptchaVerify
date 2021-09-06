@@ -8,7 +8,7 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 - test.py 这个文件有这个接口请求例子，之前公示系统爬虫上得请求方式也可以用，支持get/post两种请求
 
-- Api.py 接口文件，使用时，启动这个接口就行
+- Flask_Server.py 接口文件，使用时，启动这个接口就行
 
 - main.py 这个是主程序文件，所有得调度逻辑都是这个
 
