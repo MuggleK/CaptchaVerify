@@ -68,7 +68,7 @@ class YidunCracker:
         self.initWatchman = False
         self.pn = ""
         self.v = ""
-
+        self.random_time = ''
         self.luv = ""
         self.conf = ""
         self.wm_tid = ""
@@ -99,7 +99,7 @@ class YidunCracker:
             })
             self._localStorage.set(self.site, self.fp_config)
             # 设置 6 分钟的有效期
-            self._localStorage.expire(360)
+            self._localStorage.expire(30)
             format_print('易盾', '指纹获取完成, 已存入数据库! ')
         else:
             self.fp_config = json.loads(self.fp_config)
@@ -112,7 +112,7 @@ class YidunCracker:
                 })
                 self._localStorage.set(self.site, self.fp_config)
                 # 设置 6 分钟的有效期
-                self._localStorage.expire(360)
+                self._localStorage.expire(30)
                 format_print('易盾', '指纹获取完成, 已存入数据库! ')
             else:
                 self.fp = self.fp_config['fp']
@@ -152,7 +152,7 @@ class YidunCracker:
             }
             self.localStorage.set(self.site, json.dumps(self.wm_config))
             # 每个 wm_did 有 20 个小时的有效期, 设置过期时间: 18 小时
-            self.localStorage.expire(18 * 3600)
+            self.localStorage.expire(30)
             format_print('易盾', '该站点 wm_did 配置已存入数据库! ')
         else:
             self.wm_config = json.loads(self.wm_config)
@@ -187,7 +187,8 @@ class YidunCracker:
         处理 watchman js
         :return:
         """
-        self.v = '2.6.2_c2bb0782'
+        # self.v = '2.6.2_c2bb0782'
+        self.v = '2.7.3_eb045ea7'
         watchman_js_url = f'{self.protocol}://acstatic-dun.126.net/{self.v}/watchman.min.js'
         self.session.headers = {
             'Accept': '*/*',
@@ -210,10 +211,11 @@ class YidunCracker:
         variable1 = funcs[-1].split('[0];')[-1].split('=')[0]
 
         # b 接口 d 参数对象生成函数名
-        bd_func_name = re.findall(r'_stop\(\)};..prototype.(.*?)=.*?console\.log', watchman_js, re.S)[0]
+        bd_func_name = re.findall(r'_stop\(\)};.*prototype.(.*?)=.*?console\.log', watchman_js, re.S)[0]
         _bd_func = re.findall(f'prototype.{bd_func_name}(.*?)prototype', watchman_js, re.S)[0]
         # b 接口 d 参数变量名
-        variable2 = _bd_func.split('[0];')[-1].split('=')[0]
+        # variable2 = _bd_func.split('[0];')[-1].split('=')[0]
+        variable2 = _bd_func.split('[0];')[-2].split('=')[0]
 
         # 处理延时函数
         delay_func = re.findall(f'prototype.{delay_func_name}(.*?)prototype', watchman_js, re.S)[0]
@@ -221,7 +223,7 @@ class YidunCracker:
         watchman_js = watchman_js.replace(delay_func, '')
 
         # 处理 d 接口 d 参数对象生成函数
-        dd_func = re.findall(f'prototype.{dd_func_name}.*?prototype', watchman_js, re.S)[0]
+        dd_func = re.findall(f'prototype.{dd_func_name}=.*?prototype', watchman_js, re.S)[0]
         __dd_func = re.findall(r'.\..\(.*?\)', dd_func)[0]
         ___dd_func = __dd_func.replace(f',{variable1},', ',window.d1,')
         _dd_func = re.sub(f'];{variable1}=', '];window.d1=', dd_func)
@@ -235,16 +237,18 @@ class YidunCracker:
         __bd_func = ',' + _bd_func.split('1,')[1].split(';')[0]
         _bd_func = _bd_func.replace(__bd_func, '')
         watchman_js = watchman_js.replace(bd_func, _bd_func)
+        # print(watchman_js)
 
         # 处理延时变量
-        variable3 = re.findall(r'(Object.assign\({.*?},..:.*?,)', watchman_js)[0]
+        assign_func = re.findall(r'function .{2}\(.{1},.{1}\).*hasOwnProperty',watchman_js)[0].split('function')[1].split('(')[0].strip()
+        variable3 = re.findall(r'(%s\({.*?},..:.*?,)' % assign_func, watchman_js)[0]
         variable3_ = variable3.split(':')[-1]
         variable3_ = variable3.replace(variable3_, '!1,')
         watchman_js = watchman_js.replace(variable3, variable3_)
         # print(watchman_js)
 
-        # 处理计时变量
-        ec = re.findall(r'\.Jc=.\(\)-.', watchman_js)[0]
+        # 处理计时变量    Fc暂时写死
+        ec = re.findall(r'\.Fc=.\(\)-.', watchman_js)[0]
         if self.type in {3, 7, 9}:
             _ec = '+random(13260, 13800)'
         else:
@@ -255,26 +259,26 @@ class YidunCracker:
         watchman_js = watchman_js.replace('.merged;', f'.merged,ia={d}.ia;')
         watchman_js = watchman_js.replace('auto:', 'ia:ia,auto:')
 
-        # 处理计时变量
-        ec = re.findall(r'\.Jc=.\(\)-.', watchman_js)[0]
+        # 处理计时变量    Fc暂时写死
+        ec = re.findall(r'\.Fc=.\(\)-.', watchman_js)[0]
         if self.type in {3, 7, 9}:
             _ec = '+random(13260, 13800)'
         else:
             _ec = '+random(1326, 1380)'
         watchman_js = watchman_js.replace(ec, ec + _ec)
 
-        # 处理 watchman 初始化时长
-        v0 = re.findall(r'return.*?W\[0]', watchman_js)[0].split('return ')[-1]
+        # 处理 watchman 初始化时长 $写死
+        v0 = re.findall(r'return.*?\$\[0]', watchman_js)[0].split('return ')[-1]
         watchman_js = watchman_js.replace(v0, f'{random.randint(5, 12)}')
         # 识别时间
-        v1 = re.findall(r'return.*?W\.slice.*?\)', watchman_js)[0].split('return ')[-1]
+        v1 = re.findall(r'return.*?\$\.slice.*?\)', watchman_js)[0].split('return ')[-1]
         watchman_js = watchman_js.replace(v1,
                                           f"[{random.randint(0, 10)}, {random.randint(0, 10)}, {random.randint(0, 5)}, {random.randint(500, 1000)}, {random.randint(0, 5)}]")
 
-        # 处理轨迹时间
-        ua = re.findall(r'(\.va=.);', watchman_js)[0]
+        # 处理轨迹时间    za S写死
+        ua = re.findall(r'(\.za=.);', watchman_js)[0]
         watchman_js = watchman_js.replace(ua, ua + '-100')
-        i = re.findall(r'].V(.*?)switch', watchman_js)[0]
+        i = re.findall(r'].S(.*?)switch', watchman_js)[0]
         j = i.replace('()', '()+random(1000,2000)')
         self.watchman_js = watchman_js.replace(i, j)
 
@@ -283,7 +287,7 @@ class YidunCracker:
         协议获取 wm_did
         :return:
         """
-        url = f'{self.protocol}://ac.dun.163yun.com/v2/d'
+        url = f'{self.protocol}://ac.dun.163yun.com/v3/d'
         d = self.watchman_ctx.call('get_dd', self.protocol, self.pn, self.v, self.luv, self.conf)
         data = {
             'd': d,
@@ -303,10 +307,12 @@ class YidunCracker:
         resp = self.session.post(url, data=data, proxies=self.proxy, timeout=5)
         result = json.loads(resp.text.replace('_WM_(', '').replace(')', ''))
         format_print('易盾', 'wm_did 请求结果: {}'.format(result))
-        if result['code'] == 200:
-            self.wm_tid = result['result']['tid']
-            self.wm_did = result['result']['dt']
-            self.wm_ni = result['result']['ni']
+        if result[0] == 200:
+            random_time = random.randint(4414,4650)
+            self.random_time = f'__{result[1] + random_time + 72000000}__{result[1] + random_time}'
+            self.wm_tid = result[2]
+            self.wm_did = result[3] + self.random_time
+            self.wm_ni = result[5]
         else:
             raise Exception('协议更新, 需要重新破解! ')
 
@@ -318,14 +324,13 @@ class YidunCracker:
         :param d
         :return:
         """
-        url = f'{self.protocol}://ac.dun.163yun.com/v2/b'
+        url = f'{self.protocol}://ac.dun.163yun.com/v3/b'
 
         data = {
             'd': d,
             'v': self.v.split('_')[1],
             'cb': '_WM_'
         }
-        # print(data)
         self.session.headers = {
             'Accept': '*/*',
             'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
@@ -338,7 +343,7 @@ class YidunCracker:
         }
         resp = self.session.post(url, data=data, proxies=self.proxy, timeout=5)
         result = json.loads(resp.text.replace('_WM_(', '').replace(')', ''))
-        if result['code'] == 200 and result['result']['tid'] == self.wm_tid:
+        if result[0] == 200 and result[2] == self.wm_tid:
             return True
         return False
 
@@ -372,6 +377,7 @@ class YidunCracker:
             self.localStorage = RedisClient('dun163_wm_did', self.v)
             # 处理动态 watchman
             self.process_watchman_js()
+            # print(self.dom_js + self.watchman_js + self.encrypt_js)
             self.watchman_ctx = execjs.compile(self.dom_js + self.watchman_js + self.encrypt_js)
         else:
             raise Exception('协议更新, 需要重新破解! ')
@@ -563,8 +569,8 @@ class YidunCracker:
             mouse_end = points[0]
 
         if self.initWatchman:
-            # print(self.protocol, self.pn, self.v, self.luv, self.conf,
-            #       self.sid, self.wm_tid, self.wm_did, self.wm_ni)
+            # print(','.join([self.protocol, self.pn, self.v, self.luv, self.conf,
+            #       self.sid, self.wm_tid, self.wm_did, self.wm_ni]))
             ac_data = self.watchman_ctx.call(
                 'acTokenCheck',
                 self.protocol, self.pn, self.v, self.luv, self.conf,
@@ -600,7 +606,7 @@ class YidunCracker:
                     }
                 }
             # 控制重试次数, 一般两次内不通过即放弃
-            elif num >= 5:
+            elif num >= 2:
                 if self.initWatchman:
                     # wm_did 失效, 删除
                     self.localStorage.delete(self.site)

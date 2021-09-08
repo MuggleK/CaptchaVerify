@@ -155,9 +155,10 @@ function acTokenCheck(protocol, pn, v, luv, conf, sid, wm_tid, wm_did, wm_ni) {
         timeout: 0,
     };
 
-    window["localStorage"]["WM_TID"] = wm_tid;
-    window["localStorage"]["WM_DID"] = wm_did;
-    window["localStorage"]["WM_NI"] = wm_ni;
+    window["localStorage"][pn + ":WM_TID"] = wm_tid;
+    window["localStorage"][pn + ":WM_NI"] = wm_ni;
+    window["localStorage"][pn + ":WM_DID"] = wm_did;
+    window["localStorage"][pn + ":WM_DIV"] = v;
 
     var watchman = window.window.Watchman;
     var encrypter = new watchman(options);
