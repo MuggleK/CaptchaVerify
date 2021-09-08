@@ -98,8 +98,8 @@ class YidunCracker:
                 'expireTime': self.fp.split(':')[1]
             })
             self._localStorage.set(self.site, self.fp_config)
-            # 设置 6 分钟的有效期
-            self._localStorage.expire(30)
+            # 设置 15s 有效期
+            self._localStorage.expire(15)
             format_print('易盾', '指纹获取完成, 已存入数据库! ')
         else:
             self.fp_config = json.loads(self.fp_config)
@@ -111,8 +111,8 @@ class YidunCracker:
                     'expireTime': self.fp.split(':')[1]
                 })
                 self._localStorage.set(self.site, self.fp_config)
-                # 设置 6 分钟的有效期
-                self._localStorage.expire(30)
+                # 设置 15s 有效期
+                self._localStorage.expire(15)
                 format_print('易盾', '指纹获取完成, 已存入数据库! ')
             else:
                 self.fp = self.fp_config['fp']
@@ -151,8 +151,8 @@ class YidunCracker:
                 'wm_ni': self.wm_ni
             }
             self.localStorage.set(self.site, json.dumps(self.wm_config))
-            # 每个 wm_did 有 20 个小时的有效期, 设置过期时间: 18 小时
-            self.localStorage.expire(30)
+            # 每个 wm_did 有 20 个小时的有效期, 设置过期时间: 18 小时     高并发下wm_did有效时长20S
+            self.localStorage.expire(15)
             format_print('易盾', '该站点 wm_did 配置已存入数据库! ')
         else:
             self.wm_config = json.loads(self.wm_config)
@@ -184,7 +184,7 @@ class YidunCracker:
 
     def process_watchman_js(self):
         """
-        处理 watchman js
+        处理 watchman js  版本更新需对应特定版本改写
         :return:
         """
         # self.v = '2.6.2_c2bb0782'

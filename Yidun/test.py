@@ -8,7 +8,7 @@ from loguru import logger
 
 # n = 0
 # total = 0
-# data = {'sid':'9512a1ccb5c148fe8dbccaf8a71b5293','width':320,'referer':"https://register.ccopyright.com.cn/publicInquiry.html"}
+# data = {'sid':'a7bef55d9fed4e36a1004f2f8926a617','width':320,'referer':"https://register.ccopyright.com.cn/login.html"}
 # while True:
 #     startTime = time.time()
 #     total += 1
@@ -19,8 +19,8 @@ from loguru import logger
 #         if resp.json().get('result').get('data').get('validate'):
 #             n += 1
 #             logger.debug(f'Total Cost Time：{time.time() - startTime}s', )
-#     except:
-#         pass
+#     except Exception as e:
+#         print(e)
 #     logger.debug(f'ACC：{float(n/total)} 当前测试次数：{total}  成功次数：{n}')
 
 # 18
@@ -35,7 +35,7 @@ def sss(i):
 #
 # sss(0)
 i = [{'times':i} for i in range(1000)]
-Thread_Grab(sss,i,40)
+Thread_Grab(sss,i,8)
 # x = requests.post(
 #         'http://47.98.237.27:8778/api/CaptchaServer.php?pname=yidun&token=eYxJ54oFH__U4ysfDzxuZ_79AfRv9Kf_DlED',
 #         data={
