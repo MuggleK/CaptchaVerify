@@ -177,9 +177,9 @@ class Capt_validate:
         ct_url = 'https://static.geetest.com' + config.get('gct_path')
         try:
             ct_js = self.session.get(url=ct_url, headers=self.headers, timeout=30).text
-            fun = re.findall(';function (.{4})\((.{1})\)(.*?)return function', ct_js)[0]
-            fun_1 = 'function ' + fun[0] + fun[1] + fun[2].split('function')[0]
-            fun_2 = 'function' + fun[2].split('function')[1]
+            fun = re.findall('\[0\];function (.{4})\((.{1})\)(.*?)return function', ct_js)[0]
+            fun_1 = 'function ' + fun[0] + f'({fun[1]})' + fun[2].split('function')[0]
+            fun_2 = 'function' + 'function'.join(fun[2].split('function')[1:])
             ct_dict = {
                 'ct_key': ct_key(ct_js),
                 'ct_value': str(Calstr(fun_2 + str(Calstr(fun_1))))

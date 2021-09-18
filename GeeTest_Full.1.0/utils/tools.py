@@ -186,7 +186,7 @@ def ct_key(ct_res):
     """处理动态gct的key值"""
     str1 = unquote(re.findall("=decodeURI\('(.*?)'\);", ct_res, re.S)[0].replace('\\', ''))
     str2 = re.findall("break;\}\}\}\('(.*?)'\)};break;", ct_res, re.S)[0]
-    ind = int(re.findall(";'use strict';var .{1}=.{4}\((.*?)\);var", ct_res)[0])
+    ind = int(re.findall(";'use strict';var .{1}=.{4}\((.*?)\);", ct_res)[0])
     str3 = ''
     j = 0
     for i in range(len(str1)):
