@@ -465,7 +465,7 @@ def Zd_demo():
     proxy = get_ip()
     session = requests.session()
     query_url = f'https://ss.cods.org.cn/gc/geetest/query?t={int(time.time() * 1000)}'
-    query_res = session.get(url=query_url, headers=headers, proxy=proxy).text
+    query_res = session.get(url=query_url, headers=headers, proxies=proxy).text
     query_res = json.loads(query_res)
     gt = re.findall('"gt":"(.*?)",', query_res)[0]
     challenge = re.findall('"challenge":"(.*?)",', query_res)[0]
@@ -475,7 +475,7 @@ def Zd_demo():
     validate_ = result.get('data').get('validate')
 
     url = f'https://ss.cods.org.cn/latest/searchR?q={quote(quote(query_word))}&t=common&currentPage=1&searchToken=&geetest_challenge={challenge_}&geetest_validate={validate_}&geetest_seccode={validate_}|jordan'
-    res = session.get(url=url, headers=headers, proxy=proxy).text
+    res = session.get(url=url, headers=headers, proxies=proxy).text
     print(res)
 
 
@@ -493,4 +493,4 @@ def Geest_demo():
 
 
 if __name__ == '__main__':
-    Geest_demo()
+    Zd_demo()
