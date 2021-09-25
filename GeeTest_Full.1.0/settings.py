@@ -24,7 +24,7 @@ base_settings = {
 save_fail_rush = True
 
 # 日志保存
-save_logs = True
+save_logs = False
 
 # 是否开启调试
 isDebug = True

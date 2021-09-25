@@ -1,5 +1,6 @@
-import requests, time
-from retrying import retry
+import requests
+import time
+import random
 
 
 def red_print(str):
@@ -54,12 +55,15 @@ def my_request(url, conn=requests, proxy=None, headers={
             return
 
 
-@retry(stop_max_attempt_number=10, wait_fixed=3000)
 def get_ip():
+    # return None
     while True:
         try:
-            ip = requests.get(url='http://119.3.187.233:8005/ip', timeout=10).json()
-            # time.sleep(2)
-            return ip
+            ip = requests.get(url='http://219.151.149.149:8888/get_ips/?user_code=688688&user_key=688688').text.split(
+                '\n')
+            return {
+                'https:': random.choice(ip),
+                'http:': random.choice(ip)
+            }
         except:
             pass

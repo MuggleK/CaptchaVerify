@@ -1,10 +1,16 @@
-import redis, aiohttp, asyncio, aiofiles
-import time, execjs,requests
+import os
+import re
+import redis
+import time
+import execjs
+import requests
+import random
+import json
 from urllib.parse import quote
 from utils.proxy import get_ip
-from utils.tools import *
-from utils.img_process import *
-from settings import *
+import utils.tools as tl
+import utils.img_process as imp
+from settings import base_settings, save_fail_rush, save_logs, isDebug, redis_db_click
 from loguru import logger
 import warnings
 
@@ -16,9 +22,9 @@ class Capt_validate:
     def __init__(self):
         self.session = None
         self.capt_type = None
-        self.headers = ua(1)
-        self.aes_key = aeskey()  # 唯一aeskey
-        self.aes = AESCipher(self.aes_key)
+        self.headers = tl.ua(1)
+        self.aes_key = tl.aeskey()  # 唯一aeskey
+        self.aes = tl.AESCipher(self.aes_key)
         self.ctx_click = None  # 点选js
         self.slide_track = None  # 滑块轨迹
         # self.proxy = proxy  # 极验不校验IP
@@ -63,7 +69,7 @@ class Capt_validate:
 
         # 第一个W
         aes_encoding = self.aes.after_aes(json.dumps(init_dict, ensure_ascii=False), '')
-        rsa_encoding = RSA_encrypt(self.aes_key)
+        rsa_encoding = tl.RSA_encrypt(self.aes_key)
         f_w = aes_encoding + rsa_encoding
         url = f'https://api.geetest.com/get.php?gt={send_data["gt"]}&challenge={send_data["challenge"]}&lang=zh-cn&pt=0&client_type=web&w={f_w}&callback=geetest_{int(time.time() * 1000)}'
         res = self.session.get(url=url, headers=self.headers, proxies=send_data["proxy"], timeout=30).text
@@ -83,7 +89,7 @@ class Capt_validate:
         model = {
             "lang": "zh-cn",
             "type": "fullpage",
-            "tt": s_w_track(te, array, s),
+            "tt": tl.s_w_track(te, array, s),
             "light": "DIV_0",
             "s": "c7c3e21112fe4f741921cb3e4ff9f7cb",
             "h": "25f822388731d727af1e62f164e1eb43",
@@ -134,7 +140,7 @@ class Capt_validate:
                 "by": 0
             },
             "passtime": 9706,
-            "rp": md5_encrypt(send_data['gt'] + send_data['challenge'] + '9706'),
+            "rp": tl.md5_encrypt(send_data['gt'] + send_data['challenge'] + '9706'),
             "captcha_token": capt_token
         }
         sec_w = self.aes.after_aes(json.dumps(model, ensure_ascii=False), '')
@@ -153,7 +159,7 @@ class Capt_validate:
             fun_max = 'function ' + fun_max[0] + '(e,t)' + '{' + re.findall('(?<=\{).*(?=\})', fun_max[1])[0] + '}'
             fun_min = re.findall(';function (.*?)\(e\)(.*?)new Date\(\)', fun_max)[0]
             fun_min = 'function ' + fun_min[0] + '(e)' + fun_min[1]
-            capt_token = str(Calstr(fun_max + str(Calstr(fun_min)) + str(Calstr('bbOy'))))
+            capt_token = str(tl.Calstr(fun_max + str(tl.Calstr(fun_min)) + str(tl.Calstr('bbOy'))))
             if isDebug:
                 logger.success('动态Token：{}'.format(capt_token))
             return capt_token
@@ -181,9 +187,10 @@ class Capt_validate:
             fun_1 = 'function ' + fun[0] + f'({fun[1]})' + fun[2].split('function')[0]
             fun_2 = 'function' + 'function'.join(fun[2].split('function')[1:])
             ct_dict = {
-                'ct_key': ct_key(ct_js),
-                'ct_value': str(Calstr(fun_2 + str(Calstr(fun_1))))
+                'ct_key': tl.ct_key(ct_js),
+                'ct_value': str(tl.Calstr(fun_2 + str(tl.Calstr(fun_1))))
             }
+            ct_dict['ct_value'] = tl.ct_outer(ct_dict['ct_key'], ct_dict['ct_value'])
             if isDebug:
                 logger.success('动态ct：{}'.format(ct_dict))
             return ct_dict
@@ -194,10 +201,10 @@ class Capt_validate:
         """ 图片还原 + 计算距离 + 随机读取轨迹 """
         try:
             res_bg = self.session.get('https://static.geetest.com/' + config["bg"]).content
-            bg_arr = img_recover(res_bg)
+            bg_arr = imp.img_recover(res_bg)
             res_full = self.session.get('https://static.geetest.com/' + config["fullbg"]).content
-            full_arr = img_recover(res_full)
-            distance = SlideCrack(bg_arr, full_arr).get_gap() - 5
+            full_arr = imp.img_recover(res_full)
+            distance = imp.SlideCrack(bg_arr, full_arr).get_gap() - 5
             slide_list = json.loads(random.choice(self.slide_track[str(distance)]))
             passtime = slide_list[-1][-1]
             if isDebug:
@@ -214,10 +221,10 @@ class Capt_validate:
         """ 滑块校验 """
         start = int(time.time()) * 1000 - 10000
         current_time = start - 10000
-        track_encrypt = Track(verify_dict['track'])
+        track_encrypt = tl.Track(verify_dict['track'])
         full_arr = {
             "lang": "zh-cn",
-            "userresponse": user_encrypt(verify_dict['distance'], verify_dict['challenge']),
+            "userresponse": tl.user_encrypt(verify_dict['distance'], verify_dict['challenge']),
             "passtime": verify_dict['passtime'],
             "imgload": 63,
             "aa": track_encrypt.encrypt(track_encrypt.encrypt1(), verify_dict['array'], verify_dict['random_s']),
@@ -250,10 +257,10 @@ class Capt_validate:
                 "td": -1,
             },
             verify_dict['ct']['ct_key']: verify_dict['ct']['ct_value'],  # 66
-            'rp': md5_encrypt((verify_dict["gt"] + verify_dict['challenge'][:32] + str(verify_dict['passtime'])).encode())
+            'rp': tl.md5_encrypt((verify_dict["gt"] + verify_dict['challenge'][:32] + str(verify_dict['passtime'])).encode())
         }
         aes_encoding = self.aes.after_aes(json.dumps(full_arr, ensure_ascii=False), '')
-        rsa_encoding = RSA_encrypt(self.aes_key)
+        rsa_encoding = tl.RSA_encrypt(self.aes_key)
         third_w = aes_encoding + rsa_encoding
         verify_url = f'https://api.geetest.com/ajax.php?gt={verify_dict["gt"]}&challenge={verify_dict["challenge"]}&lang=zh-cn&pt=0&client_type=web&w={third_w}&callback=geetest_{int(time.time() * 1000)}'
         try:
@@ -274,9 +281,9 @@ class Capt_validate:
         captcha = self.session.get(headers=self.headers, timeout=30, url=img_url, proxies=config['proxy']).content
         if pic_type == 'space':
             sign = config['sign']
-            key = md5_encrypt(str(captcha) + sign)
+            key = tl.md5_encrypt(str(captcha) + sign)
         else:
-            key = md5_encrypt(captcha)
+            key = tl.md5_encrypt(captcha)
         data = self.click_redis.get(key)  # 读取图片缓存
         if data:
             fail_type = None
@@ -290,7 +297,7 @@ class Capt_validate:
             """无缓存，打码接口"""
             if pic_type == 'word' or pic_type == 'phrase':
                 fail_type = 'Chinese_fail'
-                data = chinese_recognize(captcha)
+                data = imp.chinese_recognize(captcha)
                 if not data: return {}
                 data = '-'.join([(str(v.get('x')) + ',' + str(v.get('y'))) for v in data.values()])
                 data = data.split('-')
@@ -298,21 +305,21 @@ class Capt_validate:
                     int(round(int(i.split(',')[1]) / 344 * 10000, 0))) for i in data]
             elif pic_type == 'nine':
                 fail_type = 'Nine_fail'
-                data = nine_recognize(captcha)
+                data = imp.nine_recognize(captcha)
                 if not data: return {}
                 data = [i for i in data if i != '']
                 points = data
             elif pic_type == 'space':
                 fail_type = 'Space_fail'
                 sign = config['sign']
-                key = md5_encrypt(str(captcha) + sign)
-                data = space_recognize(captcha, sign)
+                key = tl.md5_encrypt(str(captcha) + sign)
+                data = imp.space_recognize(captcha, sign)
                 if not data: return {}
                 points = [str(int(round(int(i.split(',')[0]) / 344 * 10000, 0))) + '_' + str(
                     int(round(int(i.split(',')[1]) / 344 * 10000, 0))) for i in data]
             elif pic_type == 'icon':
                 fail_type = 'Icon_fail'
-                data = icon_recognize(captcha)
+                data = imp.icon_recognize(captcha)
                 if not data: return {}
                 points = [str(int(round(int(i.split(',')[0]) / 344 * 10000, 0))) + '_' + str(
                     int(round(int(i.split(',')[1]) / 344 * 10000, 0))) for i in data]
@@ -354,7 +361,7 @@ class Capt_validate:
                 self.click_redis.set(key, value)
             if base_settings['images_fail_path'] and fail_type:
                 save_path = os.path.join(base_settings['images_fail_path'], fail_type)
-                save_image(save_path, key, captcha)
+                tl.save_image(save_path, key, captcha)
             return {}
 
     def run(self,gt,challenge,proxy):
@@ -463,7 +470,7 @@ def Zd_demo():
     gt = re.findall('"gt":"(.*?)",', query_res)[0]
     challenge = re.findall('"challenge":"(.*?)",', query_res)[0]
 
-    result = Capt_validate(gt, challenge, None).run()
+    result = Capt_validate().run(gt, challenge, None)
     challenge_ = result.get('data').get('challenge')
     validate_ = result.get('data').get('validate')
 

@@ -416,18 +416,89 @@ def ua(is_set):
     return {'User-Agent': ua_ua}
 
 
-if __name__ == '__main__':
-    aes_key = aeskey()
-    aes = AESCipher(aes_key)
-    aes_encoding = aes.after_aes(
-        '{"gt":"019924a82c70bb123aae90d483087f94","challenge":"9e1c063287ef6b71fd573ee17e44cae4","offline":false,"new_captcha":true,"product":"float","width":"300px","https":true,"api_server":"apiv6.geetest.com","protocol":"https://","click":"/static/js/click.2.9.5.js","type":"fullpage","aspect_radio":{"click":128,"beeline":50,"voice":128,"slide":103,"pencil":128},"static_servers":["static.geetest.com/","dn-staticdown.qbox.me/"],"fullpage":"/static/js/fullpage.9.0.2.js","geetest":"/static/js/geetest.6.0.9.js","beeline":"/static/js/beeline.1.0.1.js","maze":"/static/js/maze.1.0.1.js","voice":"/static/js/voice.1.2.0.js","slide":"/static/js/slide.7.7.6.js","pencil":"/static/js/pencil.1.0.3.js","cc":6,"ww":true,"i":"14835!!16140!!CSS1Compat!!1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!2!!3!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!1!!-1!!-1!!-1!!0!!0!!0!!0!!543!!937!!1920!!1040!!zh-CN!!zh-CN,zh-TW,zh,en-US,en!!-1!!1!!24!!Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36!!1!!1!!1920!!1080!!1920!!1040!!1!!1!!1!!-1!!Win32!!0!!-8!!584f4432fe6ebea605c1f943c0a39f15!!0b03cc6df4e2fc61df0144cad52b685f!!internal-pdf-viewer,mhjfbmdgcfjbbpaeojofohoefgiehjai,internal-nacl-plugin!!0!!-1!!0!!6!!Arial,ArialBlack,ArialNarrow,BookAntiqua,BookmanOldStyle,Calibri,Cambria,CambriaMath,Century,CenturyGothic,CenturySchoolbook,ComicSansMS,Consolas,Courier,CourierNew,Garamond,Georgia,Helvetica,Impact,LucidaBright,LucidaCalligraphy,LucidaConsole,LucidaFax,LucidaHandwriting,LucidaSans,LucidaSansTypewriter,LucidaSansUnicode,MicrosoftSansSerif,MonotypeCorsiva,MSGothic,MSPGothic,MSReferenceSansSerif,MSSansSerif,MSSerif,PalatinoLinotype,SegoePrint,SegoeScript,SegoeUI,SegoeUILight,SegoeUISemibold,SegoeUISymbol,Tahoma,Times,TimesNewRoman,TrebuchetMS,Verdana,Wingdings,Wingdings2,Wingdings3!!1611559916659!!-1!!-1!!-1!!12!!-1!!-1!!-1!!6!!-1!!-1"}',
-        '')
+def ct_outer(ct_key, ct_value):
+    """
+    gct key值最外层加密
+    :param ct_key:
+    :param ct_value:
+    :return:
+    """
+    ct_val_list = list(ct_value)
+    fun_num_map = {
+        'n': 5,
+        's': 1,
+        'e': 3,
+        'es': 2,
+        'en': 4,
+        'w': 7,
+        'wn': 6,
+        'ws': 8
+    }
+    fun_name_list = list(fun_num_map.keys())
+    s = 70
+    o = len(fun_name_list) - 2
+    for a in range(len(ct_key)):
+        _ = str(abs(ord(ct_key[a]) - s))[1]
+        l = int(str(abs(ord(ct_key[a]) - s))[0])
+        lastVal = int(ct_val_list[len(ct_val_list) - 1])   # 运算数
+        if int(_) > o:
+            cal_num = fun_num_map[fun_name_list[o + 1]]
+        else:
+            cal_num = fun_num_map[fun_name_list[int(_)]]
 
-    tt = Track([[-34, -39, 0], [0, 0, 0], [1, 1, 91], [3, 1, 99], [4, 1, 116], [8, 1, 123], [9, 1, 131], [11, 1, 139],
-                [12, 1, 147], [14, 1, 156], [16, 1, 163], [19, 2, 171], [21, 3, 180], [22, 3, 187], [23, 3, 196],
-                [25, 3, 203], [26, 3, 211], [27, 3, 229], [29, 3, 235], [30, 3, 243], [32, 3, 251], [33, 3, 259],
-                [34, 3, 275], [34, 4, 283], [35, 4, 291], [36, 4, 323], [37, 4, 339], [38, 4, 347], [39, 4, 363],
-                [40, 4, 371], [41, 4, 387], [42, 4, 403], [44, 4, 427], [45, 4, 445], [46, 4, 452], [47, 4, 461],
-                [49, 4, 469], [50, 4, 483], [50, 4, 572]])
-    print(tt.encrypt(tt.encrypt1(), [12, 58, 98, 36, 43, 95, 62, 15, 12], "4a347e6b"))
-    print(user_encrypt(79, "9107aa61dab48b7c101c23a35fd87fabkm"))
+        if cal_num == 8:
+            for __ in range(l):
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) * lastVal)
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) + lastVal)
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) + lastVal)
+        elif cal_num == 5:
+            for __ in range(l):
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) * lastVal)
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) * lastVal)
+        elif cal_num == 4:
+            for __ in range(l):
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) + lastVal)
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) * lastVal)
+        elif cal_num == 1:
+            for __ in range(l):
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) + lastVal)
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) + lastVal)
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) + lastVal)
+        elif cal_num == 7:
+            for __ in range(l):
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) * lastVal)
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) + lastVal)
+        elif cal_num == 3:
+            for __ in range(l):
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) + lastVal)
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) * lastVal)
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) + lastVal)
+        elif cal_num == 2:
+            for __ in range(l):
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) + lastVal)
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) + lastVal)
+        else:
+            for __ in range(l):
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) * lastVal)
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) * lastVal)
+                ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) + lastVal)
+
+    return ''.join(ct_val_list)[:10]
+
+
+if __name__ == '__main__':
+    print(ct_outer("lmxr", "1612243931"))
+    # aes_key = aeskey()
+    # aes = AESCipher(aes_key)
+    # aes_encoding = aes.after_aes(
+    #     '{"gt":"019924a82c70bb123aae90d483087f94","challenge":"9e1c063287ef6b71fd573ee17e44cae4","offline":false,"new_captcha":true,"product":"float","width":"300px","https":true,"api_server":"apiv6.geetest.com","protocol":"https://","click":"/static/js/click.2.9.5.js","type":"fullpage","aspect_radio":{"click":128,"beeline":50,"voice":128,"slide":103,"pencil":128},"static_servers":["static.geetest.com/","dn-staticdown.qbox.me/"],"fullpage":"/static/js/fullpage.9.0.2.js","geetest":"/static/js/geetest.6.0.9.js","beeline":"/static/js/beeline.1.0.1.js","maze":"/static/js/maze.1.0.1.js","voice":"/static/js/voice.1.2.0.js","slide":"/static/js/slide.7.7.6.js","pencil":"/static/js/pencil.1.0.3.js","cc":6,"ww":true,"i":"14835!!16140!!CSS1Compat!!1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!2!!3!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!1!!-1!!-1!!-1!!0!!0!!0!!0!!543!!937!!1920!!1040!!zh-CN!!zh-CN,zh-TW,zh,en-US,en!!-1!!1!!24!!Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36!!1!!1!!1920!!1080!!1920!!1040!!1!!1!!1!!-1!!Win32!!0!!-8!!584f4432fe6ebea605c1f943c0a39f15!!0b03cc6df4e2fc61df0144cad52b685f!!internal-pdf-viewer,mhjfbmdgcfjbbpaeojofohoefgiehjai,internal-nacl-plugin!!0!!-1!!0!!6!!Arial,ArialBlack,ArialNarrow,BookAntiqua,BookmanOldStyle,Calibri,Cambria,CambriaMath,Century,CenturyGothic,CenturySchoolbook,ComicSansMS,Consolas,Courier,CourierNew,Garamond,Georgia,Helvetica,Impact,LucidaBright,LucidaCalligraphy,LucidaConsole,LucidaFax,LucidaHandwriting,LucidaSans,LucidaSansTypewriter,LucidaSansUnicode,MicrosoftSansSerif,MonotypeCorsiva,MSGothic,MSPGothic,MSReferenceSansSerif,MSSansSerif,MSSerif,PalatinoLinotype,SegoePrint,SegoeScript,SegoeUI,SegoeUILight,SegoeUISemibold,SegoeUISymbol,Tahoma,Times,TimesNewRoman,TrebuchetMS,Verdana,Wingdings,Wingdings2,Wingdings3!!1611559916659!!-1!!-1!!-1!!12!!-1!!-1!!-1!!6!!-1!!-1"}',
+    #     '')
+    #
+    # tt = Track([[-34, -39, 0], [0, 0, 0], [1, 1, 91], [3, 1, 99], [4, 1, 116], [8, 1, 123], [9, 1, 131], [11, 1, 139],
+    #             [12, 1, 147], [14, 1, 156], [16, 1, 163], [19, 2, 171], [21, 3, 180], [22, 3, 187], [23, 3, 196],
+    #             [25, 3, 203], [26, 3, 211], [27, 3, 229], [29, 3, 235], [30, 3, 243], [32, 3, 251], [33, 3, 259],
+    #             [34, 3, 275], [34, 4, 283], [35, 4, 291], [36, 4, 323], [37, 4, 339], [38, 4, 347], [39, 4, 363],
+    #             [40, 4, 371], [41, 4, 387], [42, 4, 403], [44, 4, 427], [45, 4, 445], [46, 4, 452], [47, 4, 461],
+    #             [49, 4, 469], [50, 4, 483], [50, 4, 572]])
+    # print(tt.encrypt(tt.encrypt1(), [12, 58, 98, 36, 43, 95, 62, 15, 12], "4a347e6b"))
+    # print(user_encrypt(79, "9107aa61dab48b7c101c23a35fd87fabkm"))
