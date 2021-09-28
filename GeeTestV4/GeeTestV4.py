@@ -9,7 +9,7 @@ from loguru import logger
 class GeeTestV4:
 
     def __init__(self, captcha_id, risk_type='slide'):
-        self.session = requests.session()
+        self.session = None
         self.captcha_id = captcha_id
         self.challenge = tl.uuid()
         self.risk_type = risk_type
@@ -126,6 +126,26 @@ class GeeTestV4:
                     "sc": 0
                 }
             }
+        elif init_json['data']['captcha_type'] == 'pencil':
+            pencil_content = self.session.get('https://static.geetest.com/' + init_json['data']['imgs']).content
+            pencil_trace = tl.fp_trace(pencil_content)
+            decrypt_data = {
+                "passtime": random.randint(200, 1300),
+                "userresponse": pencil_trace,
+                "geetest": "captcha",
+                "lang": "zh",
+                "ep": "123",
+                ct_dict['ct_key']: ct_dict['ct_value'],
+                "em": {
+                    "ph": 0,
+                    "cp": 0,
+                    "ek": "11",
+                    "wd": 1,
+                    "nt": 0,
+                    "si": 0,
+                    "sc": 0
+                }
+            }
         aes_encoding = self.aes.new_after_aes(json.dumps(decrypt_data, ensure_ascii=False).replace(' ', ''))
         rsa_encoding = tl.RSA_encrypt(self.aes_key)
         w = aes_encoding + rsa_encoding
@@ -144,6 +164,7 @@ class GeeTestV4:
         return verify_json
 
     def main(self):
+        self.session = requests.session()
         init_json = self.init()
         ct_dict = self.Ct_process(init_json)
         distance = 0
@@ -161,11 +182,8 @@ class GeeTestV4:
             }
             login_res = self.session.get(url=login_url, params=login_params, headers=self.headers, timeout=20).json()
             if login_res.get('result') == "success":
-                logger.success(f"GeeTestV4 {init_json['data']['captcha_type']}Verify & LoginVerify Success：{verify_data['data']}")
+                logger.success(f"GeeTestV4 {init_json['data']['captcha_type']} & Login Verify Success：{verify_data['data']}")
                 return login_res
-        else:
-            print(init_json['data']['ques'])
-            print(tl.five_points(init_json['data']['ques']))
 
 
 def test(test_counts):
@@ -180,5 +198,5 @@ def test(test_counts):
 
 
 if __name__ == '__main__':
-    geetest = GeeTestV4(captcha_id='be13c9e8983709233fd1ef8d70df68a0', risk_type='winlinze')
+    geetest = GeeTestV4(captcha_id='be13c9e8983709233fd1ef8d70df68a0', risk_type='pencil')
     res = geetest.main()

@@ -816,6 +816,69 @@ def five_points(ques):
             return res
 
 
+def sort_points(center_points, new_points, end_center_point):
+    new_points.append(end_center_point)
+    center_points_ = np.array(center_points)
+    if len(center_points_) == 0:
+        return new_points
+    points_distances = center_points_ - end_center_point
+    points_length = []
+    for points_distance in points_distances:
+        points_length.append(int(np.sqrt(np.square(points_distance[0]) + np.square(points_distance[1]))))
+    min_arg = np.argmin(points_length)
+    current_end_center_point = center_points[min_arg]
+    center_points.remove(center_points[min_arg])
+    new_points = sort_points(center_points, new_points, current_end_center_point)
+    return new_points
+
+
+def fp_trace(img_content):
+    """
+    四代手势轨迹解析
+    :param img_content: 图片二进制流
+    :return:
+    """
+    image = cv2.imdecode(np.frombuffer(img_content, np.uint8), 1)
+    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    image_gray[image_gray > 180] = 255
+    image_gray[image_gray < 150] = 255
+    image_gray[image_gray < 200] = 0
+
+    image_bw = cv2.dilate(image_gray, np.ones((2, 2), dtype=np.uint8))
+    image_erode_3 = cv2.erode(image_bw, np.ones((3, 3), dtype=np.uint8))
+
+    contours, _ = cv2.findContours(255 - image_erode_3, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    areas = []
+    center_points = []
+    for i, cnt in enumerate(contours):
+        areas.append(cv2.contourArea(cnt))
+        x, y, w, h = cv2.boundingRect(cnt)
+        center_points.append([y + h // 2, x + w // 2])
+    x, y, w, h = cv2.boundingRect(contours[np.argmax(areas)])
+    end_center_point = center_points[np.argmax(areas)]
+
+    new_points = []
+    center_points.remove(end_center_point)
+    new_points = sort_points(center_points, new_points, end_center_point)
+    new_points.reverse()
+    new_points = [list(reversed(i)) for i in new_points]
+
+    # trace
+    fpTrace = []
+    fpTrace.append(new_points[0] + [0])
+    fpTrace.append([0, 0, 0])
+
+    init_timestamp = random.randint(77, 267)
+    for point in new_points[1:]:
+        init_timestamp += random.randint(7, 19)
+        point[0] = round(point[0] / 300, 2)
+        point[1] = round(point[1] / 260, 2)
+        point += [init_timestamp]
+        fpTrace.append(point)
+    fpTrace[-1][-1] += random.randint(57, 235)
+    return fpTrace
+
+
 if __name__ == '__main__':
     init_json = {"status": "success", "data": {"lot_number":"4965a642d219473eac9d5ce07fb4b425","captcha_type":"winlinze","js":"/js/gcaptcha4.js","css":"/css/gcaptcha4.css","static_path":"/v4/static/v1.3.5","imgs":["/nerualpic/v4_test/v4_winlinze_test/img_winlinze_0.png","/nerualpic/v4_test/v4_winlinze_test/img_winlinze_1.png","/nerualpic/v4_test/v4_winlinze_test/img_winlinze_2.png","/nerualpic/v4_test/v4_winlinze_test/img_winlinze_3.png","/nerualpic/v4_test/v4_winlinze_test/img_winlinze_4.png"],"ques":[[0,0,3,0,2],[0,0,2,2,0],[3,0,0,0,1],[0,2,0,0,0],[2,0,0,0,0]],"gct_path":"/v4/gct/gct4.4b7d9deafd4e2d0c123e306a23fb231b.js","feedback":"http://www.geetest.com/contact#report","logo":True,"pt":"1","captcha_mode":"risk_manage","custom_theme":{"_style":"stereoscopic","_color":"hsla(224,98%,66%,1)","_gradient":"linear-gradient(180deg, hsla(224,98%,71%,1) 0%, hsla(224,98%,66%,1) 100%)","_hover":"linear-gradient(180deg, hsla(224,98%,66%,1) 0%, hsla(224,98%,71%,1) 100%)","_brightness":"light","_radius":"4px"}}}
     print(five_points([[1, 1, 4, 0, 2], [1, 0, 1, 4, 2], [0, 2, 1, 0, 2], [0, 0, 4, 0, 2], [3, 4, 0, 4, 0]]))
