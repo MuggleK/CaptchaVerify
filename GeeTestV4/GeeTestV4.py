@@ -198,5 +198,5 @@ def test(test_counts):
 
 
 if __name__ == '__main__':
-    geetest = GeeTestV4(captcha_id='be13c9e8983709233fd1ef8d70df68a0', risk_type='pencil')
+    geetest = GeeTestV4(captcha_id='be13c9e8983709233fd1ef8d70df68a0', risk_type='slide')
     res = geetest.main()

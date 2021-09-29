@@ -659,21 +659,14 @@ class GapLocater:
         return x
 
 
-def _pic_download(url, type, ip):
+def _pic_download(url, ip):
     """
     图片下载
     :param url:
     :param type:
     :return:
     """
-    save_path = os.path.dirname(__file__) + '/images'
-    if not os.path.exists(save_path):
-        os.mkdir(save_path)
-
-    img_path = save_path + '/{}.png'.format(type)
     img_data = requests.get(url, proxies=ip).content
-    with open(img_path, 'wb') as f:
-        f.write(img_data)
     content = img_data
     return content
 
@@ -690,15 +683,16 @@ def get_distance(slider_url, captcha_url, ip):
     #     os.mkdir(save_path)
 
     # 引用上面的图片下载
-    slider_content = _pic_download(slider_url, 'slider', ip)
+    slider_content = _pic_download(slider_url, ip)
 
     # 引用上面的图片下载
-    captcha_content = _pic_download(captcha_url, 'captcha', ip)
+    captcha_content = _pic_download(captcha_url, ip)
     img_size = Image.open(BytesIO(captcha_content)).size
+    if slider_content and captcha_content:
+        distance = GapLocater(slider_content, captcha_content).run(True)[0] + 3
 
-    distance = GapLocater(slider_content, captcha_content).run(True)[0] + 3
-
-    return distance, img_size[0]
+        return distance, img_size[0]
+    return 0, 0
 
 
 def condition_icon(transfer_ques):
