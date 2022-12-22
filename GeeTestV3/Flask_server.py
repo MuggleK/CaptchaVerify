@@ -1,14 +1,15 @@
-#-*-coding:utf-8-*-
-from flask import Flask,request
+# -*-coding:utf-8-*-
+from flask import Flask, request
 import logging
-from main import Capt_validate
+from main import CaptValidate
 
 app = Flask(__name__)
-logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 LOGGER = logging.getLogger(__name__)
-geetest = Capt_validate()
+geetest = CaptValidate()
 
-@app.route('/geetest/verify', methods=['POST','GET'])
+
+@app.route('/captcha', methods=['POST', 'GET'])
 def parse_server():
     if request.method == 'POST':
         data = request.form
@@ -29,11 +30,9 @@ def parse_server():
         res['code'] = code
         res['data'] = None
     else:
-        res = geetest.run(gt,challenge,proxy)
+        res = geetest.run(gt, challenge, proxy)
     return res
 
 
 if __name__ == '__main__':
-  app.run(port=8044, host="0.0.0.0",threaded=True,debug=False)
-
-
+    app.run(port=5685, host="0.0.0.0", threaded=True, debug=False)

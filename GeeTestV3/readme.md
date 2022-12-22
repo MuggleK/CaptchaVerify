@@ -1,6 +1,6 @@
 ##python三方库安装
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-## 该接口依赖redis,node环境
+## 该接口依赖redis, node环境
 ## step1
 配置好所有设置参数
 ## step2 

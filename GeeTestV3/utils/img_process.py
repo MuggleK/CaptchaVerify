@@ -1,8 +1,12 @@
-import cv2,base64,json,requests
+import cv2
+import json
+import base64
+import requests
 from PIL import Image
 import numpy as np
 from loguru import logger
-from settings import base_settings,isDebug
+
+from settings import base_settings, isDebug
 
 
 def img_recover(buffer):
@@ -10,17 +14,18 @@ def img_recover(buffer):
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
     img = Image.fromarray(image)
-    serilize = [39, 38, 48, 49, 41, 40, 46, 47, 35, 34, 50, 51, 33, 32, 28, 29, 27, 26, 36, 37, 31, 30, 44, 45, 43,
-                42, 12
-        , 13, 23, 22, 14, 15, 21, 20, 8, 9, 25, 24, 6, 7, 3, 2, 0, 1, 11, 10, 4, 5, 19, 18, 16, 17]
+    serialize = [39, 38, 48, 49, 41, 40, 46, 47, 35, 34, 50, 51, 33, 32, 28, 29, 27, 26, 36, 37, 31, 30, 44, 45, 43,
+                 42, 12, 13, 23, 22, 14, 15, 21, 20, 8, 9, 25, 24, 6, 7, 3, 2, 0, 1, 11, 10, 4, 5, 19, 18, 16, 17]
     target = Image.new('RGB', (260, 160))
+
     for i in range(52):
-        u = serilize[i] % 26 * 12
-        c = 80 if 25 < serilize[i] else 0
+        u = serialize[i] % 26 * 12
+        c = 80 if 25 < serialize[i] else 0
         box = (u, c, u + 10, c + 80)
         region = img.crop(box)
         b = 80 if 25 < i else 0
         target.paste(region, (i % 26 * 10, b))
+
     return target
 
 
@@ -28,8 +33,10 @@ def chinese_recognize(captcha):
     image = base64.b64encode(captcha).decode()
     res = requests.post(url=base_settings['Chinese']['url'], data=json.dumps({'img': image}))
     data = res.json().get('data')
+
     if isDebug:
         logger.debug(f'极验文字点选识别结果： {data}')
+
     return data
 
 
@@ -37,8 +44,10 @@ def nine_recognize(captcha):
     image = base64.b64encode(captcha).decode()
     res = requests.post(url=base_settings['Nine_Click']['url'], data=json.dumps({'img': image}))
     data = res.json().get('data')
+
     if isDebug:
         logger.debug(f'极验九宫格识别结果： {data}')
+
     return data
 
 
@@ -46,10 +55,13 @@ def space_recognize(captcha, sign):
     image = base64.b64encode(captcha).decode()
     res = requests.post(url=base_settings['Space_verify']['url'], data=json.dumps({'img': image, 'semantics': sign}))
     data = res.json().get('data')
+
     if isDebug:
         logger.debug(f'极验空间点选识别结果： {data}')
+
     if data:
         return data.get('position')
+
     return None
 
 
@@ -57,8 +69,10 @@ def icon_recognize(captcha):
     image = base64.b64encode(captcha).decode()
     res = requests.post(url=base_settings['Icon']['url'], data=json.dumps({'img': image}))
     data = res.json().get('data')
+
     if isDebug:
         logger.debug(f'极验图标点选识别结果： {data}')
+
     return data
 
 
@@ -90,8 +104,6 @@ class SlideCrack:
     def get_gap(self):
         """
         获取缺口位置
-        :param image1:完整图片
-        :param image2: 带缺口的图片
         :return:
         """
         left = 50  # 设置一个起始量,因为验证码一般不可能在左边，加快识别速度

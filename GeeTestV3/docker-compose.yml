@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  server:
+    build: .
+    network_mode: "host"
+    volumes:
+      - "/data/logs/geetest3:/usr/spider/logs"
+      - "/home/ops/geetest3:/usr/spider"
+    container_name: geetest_v3
+#    entrypoint: ["/usr/local/bin/gunicorn", "-c", "gunicorn.py", "wsgi:app", "--preload"]
+    entrypoint: ["python3", "Flask_server.py"]

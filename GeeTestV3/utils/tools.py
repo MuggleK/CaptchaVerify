@@ -1,15 +1,49 @@
+import rsa
+import re
+import os
+import math
+import random
+import binascii
+import hashlib
 from Crypto.Cipher import AES
-import rsa, random, re, os
-import binascii, math, hashlib
+
 from urllib.parse import unquote
 
 
-def aeskey():
+def ua(is_set):
+    s_ver = [str(random.randint(10, 99)), '0', str(random.randint(1000, 9999)), str(random.randint(100, 999))]
+    version = '.'.join(s_ver)
+    webkit = 'AppleWebKit/537.36 (KHTML, like Gecko)'
+    mac = '_'.join([str(random.randint(8, 12)) for i in range(2)] + [str(random.randint(1, 10))])
+    if is_set:
+        typeid = random.randint(1, 6)
+    else:
+        typeid = 7
+    if typeid == 1:
+        ua_ua = 'Mozilla/5.0 (Windows NT 7.1; WOW64) %s Chrome/%s Safari/537.36' % (webkit, version)
+    elif typeid == 2:
+        ua_ua = 'Mozilla/5.0 (Windows NT 10.1; WOW64) %s Chrome/%s Safari/537.36' % (webkit, version)
+    elif typeid == 3:
+        ua_ua = 'Mozilla/5.0 (Windows NT 8.1; WOW64) %s Chrome/%s Safari/537.36' % (webkit, version)
+    elif typeid == 4:
+        ua_ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X %s) %s Chrome/%s Safari/537.36' % (mac, webkit, version)
+    elif typeid == 5:
+        ua_ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X %s) %s Chrome/%s Safari/537.36' % (mac, webkit, version)
+    elif typeid == 6:
+        ua_ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X %s) %s Chrome/%s Safari/537.36' % (mac, webkit, version)
+    else:
+        ua_ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X %s) %s Chrome/%s Safari/537.36' % (mac, webkit, version)
+    return {
+        'Referer': 'https://jx3.seasunwbl.com/buyer?t=coin',
+        'User-Agent': ua_ua}
+
+
+def aes_key():
     return hex((int(65536 * (1 + random.random())) | 0))[3:] + hex((int(65536 * (1 + random.random())) | 0))[3:] + hex(
         (int(65536 * (1 + random.random())) | 0))[3:] + hex((int(65536 * (1 + random.random())) | 0))[3:]
 
 
-def RSA_encrypt(aeskey):
+def rsa_encrypt(aeskey):
     public_key_n = "00C1E3934D1614465B33053E7F48EE4EC87B14B95EF88947713D25EECBFF7E74C7977D02DC1D9451F79DD5D1C10C29ACB6A9B4D6FB7D0A0279B6719E1772565F09AF627715919221AEF91899CAE08C0D686D748B20A3603BE2318CA6BC2B59706592A9219D0BF05C9F65023A21D2330807252AE0066D59CEEFA5F2748EA80BAB81"
     public_key_e = '10001'
     rsa_n = int(public_key_n, 16)
@@ -64,7 +98,7 @@ class AESCipher:
                 u2q = 2
                 continue
             if u2q == 2:
-                w9 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()";
+                w9 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()"
                 if U7q * (U7q + 1) % 2 + 5 and (Z9 < 0 or Z9 >= len(w9)):
                     return "."
                 else:
@@ -172,8 +206,12 @@ class AESCipher:
                 continue
 
 
-def Calstr(str):
-    """检测fullpage和gct核心算法"""
+def cal_str(str):
+    """
+    检测fullpage和gct核心算法
+    :param str:
+    :return:
+    """
     t = 5381
     r = len(str)
     for i in range(r):
@@ -184,9 +222,9 @@ def Calstr(str):
 
 def ct_key(ct_res):
     """处理动态gct的key值"""
-    str1 = unquote(re.findall("=decodeURI\('(.*?)'\);", ct_res, re.S)[0].replace('\\', ''))
-    str2 = re.findall("break;\}\}\}\('(.*?)'\)};break;", ct_res, re.S)[0]
-    ind = int(re.findall(";'use strict';var .{1}=.{4}\((.*?)\);", ct_res)[0])
+    str1 = unquote(re.findall("=decodeURI\\('(.*?)'\\);", ct_res, re.S)[0].replace('\\', ''))
+    str2 = re.findall("break;\\}\\}\\}\\('(.*?)'\\)};break;", ct_res, re.S)[0]
+    ind = int(re.findall(";'use strict';var e=.{4}\\((.*?)\\);", ct_res)[0])
     str3 = ''
     j = 0
     for i in range(len(str1)):
@@ -330,16 +368,23 @@ class Track:
         return a
 
 
-def md5_encrypt(x):
-    if not isinstance(x,bytes):
-        x = x.encode()
-    n = hashlib.md5()
-    n.update(x)
-    return n.hexdigest()
+def md5_encrypt(url):
+    if isinstance(url, list) or isinstance(url, tuple) or isinstance(url, str):
+        url = str(url)
+    m = hashlib.md5()
+    if isinstance(url, str):
+        url = url.encode('utf-8')
+    m.update(url)
+    return m.hexdigest()
 
 
 def user_encrypt(e, t):
-    """user_response加密"""
+    """
+    user_response加密
+    :param e:
+    :param t:
+    :return:
+    """
     r = t[-2:]
     n = [None, None]
     for i in range(len(r)):
@@ -388,32 +433,6 @@ def save_image(save_path, key, captcha):
             f.write(captcha)
     except:
         return None
-
-
-def ua(is_set):
-    s_ver = [str(random.randint(10, 99)), '0', str(random.randint(1000, 9999)), str(random.randint(100, 999))]
-    version = '.'.join(s_ver)
-    webkit = 'AppleWebKit/537.36 (KHTML, like Gecko)'
-    mac = '_'.join([str(random.randint(8, 12)) for i in range(2)] + [str(random.randint(1, 10))])
-    if is_set:
-        typeid = random.randint(1, 6)
-    else:
-        typeid = 7
-    if typeid == 1:
-        ua_ua = 'Mozilla/5.0 (Windows NT 7.1; WOW64) %s Chrome/%s Safari/537.36' % (webkit, version)
-    elif typeid == 2:
-        ua_ua = 'Mozilla/5.0 (Windows NT 10.1; WOW64) %s Chrome/%s Safari/537.36' % (webkit, version)
-    elif typeid == 3:
-        ua_ua = 'Mozilla/5.0 (Windows NT 8.1; WOW64) %s Chrome/%s Safari/537.36' % (webkit, version)
-    elif typeid == 4:
-        ua_ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X %s) %s Chrome/%s Safari/537.36' % (mac, webkit, version)
-    elif typeid == 5:
-        ua_ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X %s) %s Chrome/%s Safari/537.36' % (mac, webkit, version)
-    elif typeid == 6:
-        ua_ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X %s) %s Chrome/%s Safari/537.36' % (mac, webkit, version)
-    else:
-        ua_ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X %s) %s Chrome/%s Safari/537.36' % (mac, webkit, version)
-    return {'User-Agent': ua_ua}
 
 
 def ct_outer(ct_key, ct_value):
@@ -484,21 +503,3 @@ def ct_outer(ct_key, ct_value):
                 ct_val_list[cal_num] = str(int(ct_val_list[cal_num]) + lastVal)
 
     return ''.join(ct_val_list)[:10]
-
-
-if __name__ == '__main__':
-    print(ct_outer("lmxr", "1612243931"))
-    # aes_key = aeskey()
-    # aes = AESCipher(aes_key)
-    # aes_encoding = aes.after_aes(
-    #     '{"gt":"019924a82c70bb123aae90d483087f94","challenge":"9e1c063287ef6b71fd573ee17e44cae4","offline":false,"new_captcha":true,"product":"float","width":"300px","https":true,"api_server":"apiv6.geetest.com","protocol":"https://","click":"/static/js/click.2.9.5.js","type":"fullpage","aspect_radio":{"click":128,"beeline":50,"voice":128,"slide":103,"pencil":128},"static_servers":["static.geetest.com/","dn-staticdown.qbox.me/"],"fullpage":"/static/js/fullpage.9.0.2.js","geetest":"/static/js/geetest.6.0.9.js","beeline":"/static/js/beeline.1.0.1.js","maze":"/static/js/maze.1.0.1.js","voice":"/static/js/voice.1.2.0.js","slide":"/static/js/slide.7.7.6.js","pencil":"/static/js/pencil.1.0.3.js","cc":6,"ww":true,"i":"14835!!16140!!CSS1Compat!!1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!2!!3!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!-1!!1!!-1!!-1!!-1!!0!!0!!0!!0!!543!!937!!1920!!1040!!zh-CN!!zh-CN,zh-TW,zh,en-US,en!!-1!!1!!24!!Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36!!1!!1!!1920!!1080!!1920!!1040!!1!!1!!1!!-1!!Win32!!0!!-8!!584f4432fe6ebea605c1f943c0a39f15!!0b03cc6df4e2fc61df0144cad52b685f!!internal-pdf-viewer,mhjfbmdgcfjbbpaeojofohoefgiehjai,internal-nacl-plugin!!0!!-1!!0!!6!!Arial,ArialBlack,ArialNarrow,BookAntiqua,BookmanOldStyle,Calibri,Cambria,CambriaMath,Century,CenturyGothic,CenturySchoolbook,ComicSansMS,Consolas,Courier,CourierNew,Garamond,Georgia,Helvetica,Impact,LucidaBright,LucidaCalligraphy,LucidaConsole,LucidaFax,LucidaHandwriting,LucidaSans,LucidaSansTypewriter,LucidaSansUnicode,MicrosoftSansSerif,MonotypeCorsiva,MSGothic,MSPGothic,MSReferenceSansSerif,MSSansSerif,MSSerif,PalatinoLinotype,SegoePrint,SegoeScript,SegoeUI,SegoeUILight,SegoeUISemibold,SegoeUISymbol,Tahoma,Times,TimesNewRoman,TrebuchetMS,Verdana,Wingdings,Wingdings2,Wingdings3!!1611559916659!!-1!!-1!!-1!!12!!-1!!-1!!-1!!6!!-1!!-1"}',
-    #     '')
-    #
-    # tt = Track([[-34, -39, 0], [0, 0, 0], [1, 1, 91], [3, 1, 99], [4, 1, 116], [8, 1, 123], [9, 1, 131], [11, 1, 139],
-    #             [12, 1, 147], [14, 1, 156], [16, 1, 163], [19, 2, 171], [21, 3, 180], [22, 3, 187], [23, 3, 196],
-    #             [25, 3, 203], [26, 3, 211], [27, 3, 229], [29, 3, 235], [30, 3, 243], [32, 3, 251], [33, 3, 259],
-    #             [34, 3, 275], [34, 4, 283], [35, 4, 291], [36, 4, 323], [37, 4, 339], [38, 4, 347], [39, 4, 363],
-    #             [40, 4, 371], [41, 4, 387], [42, 4, 403], [44, 4, 427], [45, 4, 445], [46, 4, 452], [47, 4, 461],
-    #             [49, 4, 469], [50, 4, 483], [50, 4, 572]])
-    # print(tt.encrypt(tt.encrypt1(), [12, 58, 98, 36, 43, 95, 62, 15, 12], "4a347e6b"))
-    # print(user_encrypt(79, "9107aa61dab48b7c101c23a35fd87fabkm"))
