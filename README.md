@@ -1,2 +1,2 @@
 # Spiders
-Captcha & Font & Javascript test_crontab
+Captcha & Font & Javascript

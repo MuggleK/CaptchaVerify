@@ -16,7 +16,7 @@ function get_dd(protocol, pn, v, luv, conf) {
     };
 
     new watchman(options);
-    return window.d1
+    return window.xhr_data;
 }
 
 function sample(e, t) {
@@ -285,10 +285,10 @@ function acTokenCheck(protocol, pn, v, luv, conf, sid, wm_tid, wm_did, wm_ni) {
         window.nike = obj
     };
 
-    encrypter._getToken(sid, getAcToken, 750);
+    encrypter._getToken(sid, getAcToken, 500);
     encrypter._getNdInfo(getNike);
     return {
-        d: window.d2,
+        d: window.xhr_data,
         acToken: window.acToken,
         wm_nike: window.nike
     }

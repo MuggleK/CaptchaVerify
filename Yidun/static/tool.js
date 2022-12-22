@@ -8,3 +8,6 @@ function B() {
 function C() {
     return Math.random().toString(36).slice(2, 9)
 }
+
+console.log(Math.random().toString(36))
+console.log(C())

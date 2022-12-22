@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  server:
+    build: .
+    network_mode: "host"
+    volumes:
+      - "/data/logs/Yidun:/usr/spider/logs"
+      - "/home/ops/server/Yidun:/usr/spider"
+    container_name: yidun
+    restart: always
+    entrypoint: ["python3", "app.py"]
